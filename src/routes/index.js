@@ -1,7 +1,7 @@
-import bookRoute from "./book.route";
+import authRoute from "./auth.route";
 
 const routes = [
-  bookRoute,
+  authRoute,
 ];
 
 export default routes;

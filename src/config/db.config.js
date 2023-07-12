@@ -2,7 +2,7 @@ const dbConfig = {
   HOST: "localhost",
   USER: "root",
   PASSWORD: "",
-  DB: "testdb",
+  DB: "mini_project_api",
   dialect: "mysql",
   pool: {
     max: 5,

@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use('/static', express.static('uploads'));
 
-database.sync({ force: true})
+database.sync()
 .then(() => {
   console.info("database synced");
 })
@@ -21,7 +21,7 @@ app.get("/", (req, res) => {
   res.json({ message: "test server" });
 });
 
-app.use("/api/v1", Object.values(routes));
+app.use("/api", Object.values(routes));
 
 const PORT = process.env.PORT || 3010;
 
