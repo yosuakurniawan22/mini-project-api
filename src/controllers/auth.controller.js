@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import User from "../models/user.model";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -20,10 +21,8 @@ async function register(req, res) {
     if(!passwordRegexValidate.test(password)) {
       return res.status(400).json({
         status: 400,
-        success: false,
         message: "Password must be at least 8 characters long and contain at least one uppercase letter and one number",
         data: null,
-        error: "Bad Request",
       });
     }
 
@@ -38,11 +37,9 @@ async function register(req, res) {
     });
 
     const token = jwt.sign({
-      data: {
-        id: user.id,
-        username: user.username,
-        email: user.email
-      }
+      id: user.id,
+      username: user.username,
+      email: user.email
     }, process.env.SECRET_KEY, { expiresIn: '1h'});
 
     return res.status(201).json({
@@ -100,7 +97,7 @@ async function verifyAccount(req, res) {
         });
       }
 
-      const { id } = decoded.data;
+      const { id } = decoded;
 
       const user = await User.findByPk(id);
 
@@ -132,4 +129,111 @@ async function verifyAccount(req, res) {
   }
 }
 
-export default { register, verifyAccount };
+async function login(req, res) {
+  try {
+    const { username, email, phone, password } = req.body;
+
+    const user = await User.findOne({
+      where: {
+        [Op.or]: [{ username }, { email }, { phone }],
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
+        data: null,
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        status: 401,
+        message: "Invalid password",
+        data: null,
+      });
+    }
+
+    const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, {
+      expiresIn: "1h",
+    });
+
+    return res.status(200).json({
+      status: 200,
+      message: "Login successful",
+      data: user,
+      token
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      data: null,
+    });
+  }
+}
+
+async function keepLogin(req, res) {
+  try {
+    const header = req.headers.authorization;
+
+    if (!header || !header.startsWith("Bearer ")) {
+      return res.status(401).json({
+        status: 401,
+        message: "Unauthorized. No token provided",
+        data: null,
+      });
+    }
+
+    const token = header.split(" ")[1];
+
+    jwt.verify(token, process.env.SECRET_KEY, async (err, decoded) => {
+      if (err) {
+        return res.status(401).json({
+          status: 401,
+          message: "Unauthorized. Invalid token",
+          data: null,
+        });
+      }
+
+      const { id } = decoded;
+
+      const user = await User.findByPk(id);
+
+      if (!user) {
+        return res.status(404).json({
+          status: 404,
+          message: "User not found",
+          data: null,
+        });
+      }
+
+      const newToken = jwt.sign({
+        id: user.id,
+        username: user.username,
+        email: user.email
+      }, process.env.SECRET_KEY, { expiresIn: '1h'});
+  
+
+      return res.status(200).json({
+        status: 200,
+        message: "Keep login successful",
+        data: user,
+        token: newToken
+      });
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      data: null,
+    });
+  }
+}
+
+export default { register, verifyAccount, login, keepLogin};
