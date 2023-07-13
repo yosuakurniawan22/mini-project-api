@@ -75,50 +75,28 @@ async function register(req, res) {
 
 async function verifyAccount(req, res) {
   try {
-    const header = req.headers.authorization;
+    const id = req.id;
 
-    if(!header || !header.startsWith("Bearer ")) {
-      return res.status(401).json({
-        status: 401,
-        message: "Unauthorized. No token provided",
+    const user = await User.findByPk(id);
+
+    if(!user) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
         data: null,
       });
     }
 
-    // Get token from Bearer token
-    const token = header.split(" ")[1];
-  
-    jwt.verify(token, process.env.SECRET_KEY, async(error, decoded) => {
-      if(error) {
-        return res.status(401).json({
-          status: 401,
-          message: "Unauthorized. Invalid token",
-          data: null,
-        });
-      }
+    // Update user verified_at
+    user.verified_at = new Date();
 
-      const { id } = decoded;
+    await user.save();
 
-      const user = await User.findByPk(id);
+    return res.status(200).json({
+      status: 200,
+      message: "Your account success verified",
+    });
 
-      if(!user) {
-        return res.status(404).json({
-          status: 404,
-          message: "User not found",
-          data: null,
-        });
-      }
-
-      // Update user verified_at
-      user.verified_at = new Date();
-
-      await user.save();
-
-      return res.status(200).json({
-        status: 200,
-        message: "Your account success verified",
-      });
-    })
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -364,4 +342,102 @@ async function resetPassword(req, res) {
   }
 }
 
-export default { register, verifyAccount, login, keepLogin, forgotPassword, resetPassword};
+async function changePassword(req, res) {
+  try {
+    const { currentPassword, password, confirmPassword } = req.body;
+
+    if (!currentPassword || !password || !confirmPassword) {
+      return res.status(400).json({
+        status: 400,
+        message: "Please provide current password, password, and confirm password",
+        data: null,
+      });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({
+        status: 400,
+        message: "Password and confirm password do not match",
+        data: null,
+      });
+    }
+
+    const header = req.headers.authorization;
+
+    if (!header || !header.startsWith("Bearer ")) {
+      return res.status(401).json({
+        status: 401,
+        message: "Unauthorized. No token provided",
+        data: null,
+      });
+    }
+
+    const token = header.split(" ")[1];
+
+    jwt.verify(token, process.env.SECRET_KEY, async (err, decoded) => {
+      if (err) {
+        return res.status(401).json({
+          status: 401,
+          message: "Unauthorized. Invalid token",
+          data: null,
+        });
+      }
+
+      const { id } = decoded;
+
+      const user = await User.findByPk(id);
+
+      if (!user) {
+        return res.status(404).json({
+          status: 404,
+          message: "User not found",
+          data: null,
+        });
+      }
+
+        // Compare the current password with the stored hashed password
+      const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+      if (!isPasswordValid) {
+        return res.status(401).json({
+          status: 401,
+          message: "Invalid current password",
+          data: null,
+        });
+      }
+
+      const passwordRegexValidate = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+      if (!passwordRegexValidate.test(password)) {
+        return res.status(400).json({
+          status: 400,
+          message:
+            "Password must be at least 8 characters long and contain at least one uppercase letter and one number",
+          data: null,
+        });
+      }
+
+     
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+    
+      user.password = hashedPassword;
+      await user.save();
+
+      return res.status(200).json({
+        status: 200,
+        message: "Password change success",
+        data: null,
+      });
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      data: null,
+    });
+  }
+}
+
+export default { register, verifyAccount, login, keepLogin, forgotPassword, resetPassword, changePassword};
