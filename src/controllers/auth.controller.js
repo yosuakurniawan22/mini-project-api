@@ -374,4 +374,123 @@ async function changePassword(req, res) {
   }
 }
 
-export default { register, verifyAccount, login, keepLogin, forgotPassword, resetPassword, changePassword};
+async function changeUsername(req, res) {
+  try {
+    const { currentUsername, newUsername } = req.body;
+
+    // Get user id from jwt token
+    const id = req.id; 
+
+    if (!currentUsername || !newUsername) {
+      return res.status(400).json({
+        status: 400,
+        message: "Please provide current username and new username",
+        data: null,
+      });
+    }
+
+    // Find the user by ID
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
+        data: null,
+      });
+    }
+
+    if (user.username !== currentUsername) {
+      return res.status(400).json({
+        status: 400,
+        message: "Invalid current username",
+        data: null,
+      });
+    }
+
+    user.username = newUsername;
+    await user.save();
+
+    return res.status(200).json({
+      status: 200,
+      message: "Username change success",
+      data: null,
+    });
+  } catch (error) {
+    // Unique Column Error
+    if (error.name === "SequelizeUniqueConstraintError") {
+      let field = "";
+      if (error.fields.email) {
+        field = "email";
+      } else if (error.fields.username) {
+        field = "username";
+      }
+
+      return res.status(400).json({
+        status: 400,
+        message: `The ${field} is already exists`,
+        data: null,
+      });
+    }
+
+    return res.status(500).json({
+      status: 500,
+      message: `Internal server error`,
+      data: null,
+    });
+  }
+}
+
+async function changePhone(req, res) {
+  try {
+    const { currentPhone, newPhone } = req.body;
+
+    // Get User ID from JWT token
+    const id = req.id; 
+
+    if (!currentPhone || !newPhone) {
+      return res.status(400).json({
+        status: 400,
+        message: "Please provide current phone and new phone",
+        data: null,
+      });
+    }
+
+    // Find the user by ID
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
+        data: null,
+      });
+    }
+
+    if (user.phone !== currentPhone) {
+      return res.status(400).json({
+        status: 400,
+        message: "Invalid current phone number",
+        data: null,
+      });
+    }
+
+    user.phone = newPhone;
+    await user.save();
+
+    return res.status(200).json({
+      status: 200,
+      message: "Phone number change success",
+      data: null,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      data: null,
+    });
+  }
+}
+
+export default { register, verifyAccount, login, keepLogin, forgotPassword, resetPassword, changePassword, changeUsername, changePhone};

@@ -11,5 +11,7 @@ router.get("/auth", authenticateJWT, AuthController.keepLogin);
 router.put("/auth/forgotPass", AuthController.forgotPassword);
 router.patch("/auth/resetPass", authenticateJWT, AuthController.resetPassword);
 router.patch("/auth/changePass", authenticateJWT, AuthController.changePassword);
+router.patch("/auth/changeUsername", authenticateJWT, AuthController.changeUsername);
+router.patch("/auth/changePhone", authenticateJWT, AuthController.changePhone);
 
 export default router;
