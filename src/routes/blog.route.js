@@ -9,6 +9,7 @@ router.get("/blog/allCategory", CategoryController.getAllCategory);
 router.post("/blog", authenticateJWT, BlogController.createBlog);
 router.patch("/blog/remove/:id", authenticateJWT, BlogController.deleteBlog);
 router.post("/blog/like", authenticateJWT, BlogController.likeBlog);
+router.delete("/blog/unlike", authenticateJWT, BlogController.unlikeBlog);
 
 
 export default router;

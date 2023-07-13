@@ -147,4 +147,38 @@ async function likeBlog(req, res) {
   }
 }
 
-export default {createBlog, deleteBlog, likeBlog } 
+async function unlikeBlog(req, res) {
+  const { BlogId } = req.body;
+  const UserId = req.id;
+
+  try {
+    const likedBlog = await Like.findOne({
+      where: { UserId, BlogId }
+    });
+
+    if (!likedBlog) {
+      return res.status(404).json({
+        status: 404,
+        message: "You are not already like this blog",
+        data: null,
+      });
+    }
+
+    await likedBlog.destroy();
+
+    return res.status(200).json({
+      status: 200,
+      message: "Unlike successful",
+      data: null,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      data: null,
+    });
+  }
+}
+
+export default {createBlog, deleteBlog, likeBlog, unlikeBlog } 
