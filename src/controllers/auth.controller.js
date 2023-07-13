@@ -12,10 +12,8 @@ async function register(req, res) {
     if(!(password === confirmPassword)) {
       return res.status(400).json({
         status: 400,
-        success: false,
         message: "Password and Confirm Password is not same",
         data: null,
-        error: "Bad Request",
       });
     }
 
