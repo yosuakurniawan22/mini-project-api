@@ -493,4 +493,71 @@ async function changePhone(req, res) {
   }
 }
 
-export default { register, verifyAccount, login, keepLogin, forgotPassword, resetPassword, changePassword, changeUsername, changePhone};
+async function changeEmail(req, res) {
+  try {
+    const { currentEmail, newEmail } = req.body;
+    
+    // Get user id from JWT Token
+    const id = req.id;
+
+    if (!currentEmail || !newEmail) {
+      return res.status(400).json({
+        status: 400,
+        message: "Please provide current email and new email",
+        data: null,
+      });
+    }
+
+    // Find the user by ID
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
+        data: null,
+      });
+    }
+
+    if (user.email !== currentEmail) {
+      return res.status(400).json({
+        status: 400,
+        message: "Invalid current email",
+        data: null,
+      });
+    }
+
+    user.email = newEmail;
+    await user.save();
+
+    return res.status(200).json({
+      status: 200,
+      message: "Email change success",
+      data: null,
+    });
+  } catch (error) {
+    // Unique Column Error
+    if (error.name === "SequelizeUniqueConstraintError") {
+      let field = "";
+      if (error.fields.email) {
+        field = "email";
+      } else if (error.fields.username) {
+        field = "username";
+      }
+
+      return res.status(400).json({
+        status: 400,
+        message: `The ${field} is already exists`,
+        data: null,
+      });
+    }
+
+    return res.status(500).json({
+      status: 500,
+      message: `Internal server error`,
+      data: null,
+    });
+  }
+}
+
+export default { register, verifyAccount, login, keepLogin, forgotPassword, resetPassword, changePassword, changeUsername, changePhone, changeEmail};
