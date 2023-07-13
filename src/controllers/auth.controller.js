@@ -2,6 +2,8 @@ import { Op } from "sequelize";
 import User from "../models/user.model";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { uploadSingleImage } from "../utils/uploadImage";
+import { existsSync, unlink } from "fs";
 
 async function register(req, res) {
   try {
@@ -560,4 +562,61 @@ async function changeEmail(req, res) {
   }
 }
 
-export default { register, verifyAccount, login, keepLogin, forgotPassword, resetPassword, changePassword, changeUsername, changePhone, changeEmail};
+async function changePhotoProfile(req, res) {
+  const upload = uploadSingleImage("file");
+
+  upload(req, res, async(err) => {
+    if (err) {
+      return res.status(400).json({ status: 400, message: "File upload failed", data: null });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        status: 400,
+        message: "Please provide a file",
+        data: null,
+      });
+    }
+    
+    try {
+      const id = req.id;
+      
+      const user = await User.findByPk(id);
+
+      if (!user) {
+        return res.status(404).json({
+          status: 404,
+          message: "User not found",
+          data: null,
+        });
+      }
+
+      if (user.photo_profile) {
+        if (existsSync('Public/' + user.photo_profile)) {
+          unlink('Public/' + user.photo_profile, (err) => {
+            if (err) throw err;
+          });
+        }
+      }
+
+      user.photo_profile = req.file.filename;
+
+      await user.save();
+
+      return res.status(200).json({
+        status: 200,
+        message: "Photo profile change successful",
+        data: null,
+      });
+    } catch (e) {
+      console.log(e);
+      return res.status(500).json({
+        status: 500,
+        message: `Internal server error`,
+        data: null,
+      });
+    }
+  })
+}
+
+export default { register, verifyAccount, login, keepLogin, forgotPassword, resetPassword, changePassword, changeUsername, changePhone, changeEmail, changePhotoProfile};

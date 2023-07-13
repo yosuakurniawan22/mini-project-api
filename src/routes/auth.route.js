@@ -14,5 +14,6 @@ router.patch("/auth/changePass", authenticateJWT, AuthController.changePassword)
 router.patch("/auth/changeUsername", authenticateJWT, AuthController.changeUsername);
 router.patch("/auth/changePhone", authenticateJWT, AuthController.changePhone);
 router.patch("/auth/changeEmail", authenticateJWT, AuthController.changeEmail);
+router.post("/profile/single-uploaded", authenticateJWT, AuthController.changePhotoProfile);
 
 export default router;
