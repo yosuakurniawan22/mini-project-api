@@ -7,7 +7,7 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use('/static', express.static('uploads'));
+app.use('/Public', express.static('Public'));
 
 database.sync()
 .then(() => {

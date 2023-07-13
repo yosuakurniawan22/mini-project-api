@@ -157,7 +157,11 @@ async function login(req, res) {
       });
     }
 
-    const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, {
+    const token = jwt.sign({ 
+      id: user.id,
+      username: user.username,
+      email: user.email 
+    }, process.env.SECRET_KEY, {
       expiresIn: "1h",
     });
 
@@ -236,4 +240,42 @@ async function keepLogin(req, res) {
   }
 }
 
-export default { register, verifyAccount, login, keepLogin};
+async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ where: { email }});
+
+    if(!user) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
+        data: null,
+      });
+    }
+
+    const token = jwt.sign({
+      id: user.id,
+      username: user.username,
+      email: user.email
+    }, process.env.SECRET_KEY, { expiresIn: '1h'});
+
+    const resetLink = `http://localhost:3005/reset-password?token=${token}`;
+
+    return res.status(200).json({
+      status: 200,
+      message: "Password reset link sent",
+      resetLink,
+      data: token,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      data: null,
+    });
+  }
+}
+
+export default { register, verifyAccount, login, keepLogin, forgotPassword};
