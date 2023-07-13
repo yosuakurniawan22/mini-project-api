@@ -6,7 +6,9 @@ import BlogController from "../controllers/blog.controller";
 const router = Router();
 
 router.get("/blog/allCategory", CategoryController.getAllCategory);
-router.post("/blog", authenticateJWT, BlogController.createBlog)
+router.post("/blog", authenticateJWT, BlogController.createBlog);
+router.patch("/blog/remove/:id", authenticateJWT, BlogController.deleteBlog);
+router.post("/blog/like", authenticateJWT, BlogController.likeBlog);
 
 
 export default router;
