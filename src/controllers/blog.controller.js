@@ -19,7 +19,6 @@ async function createBlog(req, res) {
       return res.status(400).json({
         status: 400,
         message: "Please provide a file",
-        data: null,
       });
     }
 
@@ -72,7 +71,6 @@ async function createBlog(req, res) {
       return res.status(500).json({
         status: 500,
         message: `Internal server error`,
-        data: null,
       });
     }
   });
@@ -97,14 +95,12 @@ async function deleteBlog(req, res) {
     return res.status(200).json({
       status: 200,
       message: "Blog deleted successfully",
-      data: null,
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       status: 500,
       message: "Internal server error",
-      data: null,
     });
   }
 }
@@ -147,7 +143,6 @@ async function likeBlog(req, res) {
     return res.status(500).json({
       status: 500,
       message: "Internal server error",
-      data: null,
     });
   }
 }
@@ -165,7 +160,6 @@ async function unlikeBlog(req, res) {
       return res.status(404).json({
         status: 404,
         message: "You are not already like this blog",
-        data: null,
       });
     }
 
@@ -174,14 +168,12 @@ async function unlikeBlog(req, res) {
     return res.status(200).json({
       status: 200,
       message: "Unlike successful",
-      data: null,
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       status: 500,
       message: "Internal server error",
-      data: null,
     });
   }
 }
@@ -253,7 +245,6 @@ async function getBlog(req, res) {
     const totalPages = Math.ceil(totalRows / options.limit);
 
     if (page > totalPages) {
-      // Return empty result if the requested page exceeds the total pages
       return res.status(200).json({
         page: page,
         rows: totalRows,
@@ -277,7 +268,6 @@ async function getBlog(req, res) {
     return res.status(500).json({
       status: 500,
       message: "Internal server error",
-      data: null,
     });
   }
 }
@@ -376,7 +366,6 @@ async function getBlogByUserLogin(req, res) {
     return res.status(500).json({
       status: 500,
       message: "Internal server error",
-      data: null,
     });
   }
 }
@@ -485,7 +474,6 @@ async function getLikedBlog(req, res) {
     return res.status(500).json({
       status: 500,
       message: "Internal server error",
-      data: null,
     });
   }
 }
@@ -572,7 +560,6 @@ async function getMostFavoriteBlog(req, res) {
     return res.status(500).json({
       status: 500,
       message: "Internal server error",
-      data: null,
     });
   }
 }
