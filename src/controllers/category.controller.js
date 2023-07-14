@@ -10,7 +10,6 @@ async function getAllCategory(req, res) {
     return res.status(500).json({
       status: 500,
       message: `Internal server error`,
-      data: null,
     });
   }
 }
