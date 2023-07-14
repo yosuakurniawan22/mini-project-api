@@ -1,8 +1,11 @@
 import Blog from "../models/blog.model";
+import BlogKeyword from "../models/blog_keyword.model";
 import Category from "../models/category.model";
 import Keyword from "../models/keyword.model";
 import Like from "../models/like.model";
+import User from "../models/user.model";
 import { uploadSingleImage } from "../utils/uploadImage";
+import { Op } from "sequelize";
 
 async function createBlog(req, res) {
   const upload = uploadSingleImage("file");
@@ -29,6 +32,7 @@ async function createBlog(req, res) {
       const videoURL = req.body.data.videoURL ? req.body.data.videoURL : "";
 
       const category = await Category.findByPk(CategoryId);
+      const UserId = req.id;
 
       if (!category) {
         return res.status(404).json({
@@ -45,6 +49,7 @@ async function createBlog(req, res) {
         content,
         country,
         CategoryId,
+        UserId
       });
 
       const keywordsToAdd = [];
@@ -181,4 +186,100 @@ async function unlikeBlog(req, res) {
   }
 }
 
-export default {createBlog, deleteBlog, likeBlog, unlikeBlog } 
+async function getBlog(req, res) {
+  const { id_cat, sort, page = 1, search, sortBy, size } = req.query;
+
+  const options = {
+    where: {},
+    include: [
+      {
+        model: Category,
+        as: "Category",
+      },
+      {
+        model: User,
+        as: "User",
+        attributes: ["username", "photo_profile"],
+      },
+      {
+        model: BlogKeyword,
+        as: "Blog_Keywords",
+        include: [
+          {
+            model: Keyword,
+            as: "Keywords",
+          },
+        ],
+      },
+      {
+        model: Like,
+        include: [
+          {
+            model: User,
+            as: "User",
+            attributes: ["username"],
+          },
+        ],
+      },
+    ],
+    order: [],
+    offset: 0,
+    limit: 10,
+  };
+
+  if (id_cat) {
+    options.where.CategoryId = id_cat;
+  }
+
+  if (sort && sortBy) {
+    const order = [[sortBy, sort.toUpperCase() === "DESC" ? "DESC" : "ASC"]];
+    options.order.push(...order);
+  }
+
+  if (page && size) {
+    const offset = (page - 1) * size;
+    const limit = parseInt(size);
+    options.offset = offset;
+    options.limit = limit;
+  }
+
+  if (search) {
+    options.where.title = { [Op.like]: `%${search}%` };
+  }
+
+  try {
+    const totalRows = await Blog.count({ where: options.where });
+
+    const totalPages = Math.ceil(totalRows / options.limit);
+
+    if (page > totalPages) {
+      // Return empty result if the requested page exceeds the total pages
+      return res.status(200).json({
+        page: page,
+        rows: totalRows,
+        blogPage: totalPages,
+        listLimit: options.limit,
+        result: [],
+      });
+    }
+
+    const blogs = await Blog.findAll(options);
+
+    return res.status(200).json({
+      page: parseInt(page),
+      rows: totalRows,
+      blogPage: totalPages,
+      listLimit: options.limit,
+      result: blogs,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      data: null,
+    });
+  }
+}
+
+export default {createBlog, deleteBlog, likeBlog, unlikeBlog, getBlog } 

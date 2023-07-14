@@ -8,4 +8,5 @@ const Keyword = database.define("keyword", {
   },
 });
 
+
 export default Keyword;

@@ -1,7 +1,8 @@
 import { DataTypes } from "sequelize";
 import database from "../db";
 import Category from "./category.model";
-import Keyword from "./keyword.model";
+import Like from "./like.model";
+import User from "./user.model";
 
 const Blog = database.define("blog", {
   id: {
@@ -27,9 +28,11 @@ const Blog = database.define("blog", {
   },
   isPublished: {
     type: DataTypes.BOOLEAN,
+    defaultValue: false,
   },
   isDeleted: {
     type: DataTypes.BOOLEAN,
+    defaultValue: false,
   },
   createdAt: {
     type: DataTypes.DATE,
@@ -42,14 +45,18 @@ const Blog = database.define("blog", {
   },
   total_fav: {
     type: DataTypes.INTEGER,
+    defaultValue: 0,
   },
-},);
+  UserId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+});
 
-Blog.belongsTo(Category);
-Category.hasMany(Blog);
+Blog.belongsTo(Category, { foreignKey: "CategoryId", as: "Category" });
+Category.hasMany(Blog, { foreignKey: "CategoryId" });
 
-Blog.belongsToMany(Keyword, { through: "BlogKeyword", foreignKey: "BlogId" });
-Keyword.belongsToMany(Blog, { through: "BlogKeyword", foreignKey: "KeywordId" });
-
+Blog.hasMany(Like, { foreignKey: "BlogId" });
+Blog.belongsTo(User, { foreignKey: "UserId", as: "User"});
 
 export default Blog;

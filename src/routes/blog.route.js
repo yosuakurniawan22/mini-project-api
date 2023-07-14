@@ -10,6 +10,7 @@ router.post("/blog", authenticateJWT, BlogController.createBlog);
 router.patch("/blog/remove/:id", authenticateJWT, BlogController.deleteBlog);
 router.post("/blog/like", authenticateJWT, BlogController.likeBlog);
 router.delete("/blog/unlike", authenticateJWT, BlogController.unlikeBlog);
+router.get("/blog", BlogController.getBlog);
 
 
 export default router;

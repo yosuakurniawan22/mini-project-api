@@ -27,4 +27,7 @@ const Like = database.define("Like", {
   },
 });
 
+Like.belongsTo(User, { foreignKey: "UserId", as: "User" });
+User.hasMany(Like, { foreignKey: "UserId" });
+
 export default Like;
