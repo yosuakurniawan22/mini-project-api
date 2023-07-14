@@ -13,7 +13,6 @@ async function register(req, res) {
       return res.status(400).json({
         status: 400,
         message: "Password and Confirm Password is not same",
-        data: null,
       });
     }
 
@@ -22,7 +21,6 @@ async function register(req, res) {
       return res.status(400).json({
         status: 400,
         message: "Password must be at least 8 characters long and contain at least one uppercase letter and one number",
-        data: null,
       });
     }
 
@@ -61,14 +59,12 @@ async function register(req, res) {
       return res.status(400).json({
         status: 400,
         message: `The ${field} is already exists`,
-        data: null,
       });
     }
 
     return res.status(500).json({
       status: 500,
       message: `Internal server error`,
-      data: null,
     });
   }
 }
@@ -83,7 +79,6 @@ async function verifyAccount(req, res) {
       return res.status(404).json({
         status: 404,
         message: "User not found",
-        data: null,
       });
     }
 
@@ -102,7 +97,6 @@ async function verifyAccount(req, res) {
     return res.status(500).json({
       status: 500,
       message: `Internal server error`,
-      data: null,
     });
   }
 }
@@ -121,7 +115,6 @@ async function login(req, res) {
       return res.status(404).json({
         status: 404,
         message: "User not found",
-        data: null,
       });
     }
 
@@ -131,7 +124,6 @@ async function login(req, res) {
       return res.status(401).json({
         status: 401,
         message: "Invalid password",
-        data: null,
       });
     }
 
@@ -154,7 +146,6 @@ async function login(req, res) {
     return res.status(500).json({
       status: 500,
       message: "Internal server error",
-      data: null,
     });
   }
 }
@@ -169,7 +160,6 @@ async function keepLogin(req, res) {
       return res.status(404).json({
         status: 404,
         message: "User not found",
-        data: null,
       });
     }
 
@@ -191,7 +181,6 @@ async function keepLogin(req, res) {
     return res.status(500).json({
       status: 500,
       message: "Internal server error",
-      data: null,
     });
   }
 }
@@ -206,7 +195,6 @@ async function forgotPassword(req, res) {
       return res.status(404).json({
         status: 404,
         message: "User not found",
-        data: null,
       });
     }
 
@@ -229,7 +217,6 @@ async function forgotPassword(req, res) {
     return res.status(500).json({
       status: 500,
       message: "Internal server error",
-      data: null,
     });
   }
 }
@@ -242,7 +229,6 @@ async function resetPassword(req, res) {
       return res.status(400).json({
         status: 400,
         message: "Password or confirm password is empty",
-        data: null,
       });
     }
 
@@ -250,7 +236,6 @@ async function resetPassword(req, res) {
       return res.status(400).json({
         status: 400,
         message: "Password and confirm password not match",
-        data: null,
       });
     }
 
@@ -260,7 +245,6 @@ async function resetPassword(req, res) {
         status: 400,
         message:
           "Password must be at least 8 characters long and contain at least one uppercase letter and one number",
-        data: null,
       });
     }
 
@@ -273,7 +257,6 @@ async function resetPassword(req, res) {
       return res.status(404).json({
         status: 404,
         message: "User not found",
-        data: null,
       });
     }
 
@@ -286,14 +269,12 @@ async function resetPassword(req, res) {
     return res.status(200).json({
       status: 200,
       message: "Password reset success",
-      data: null,
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       status: 500,
       message: "Internal server error",
-      data: null,
     });
   }
 }
@@ -306,7 +287,6 @@ async function changePassword(req, res) {
       return res.status(400).json({
         status: 400,
         message: "Please provide current password, password, and confirm password",
-        data: null,
       });
     }
 
@@ -314,7 +294,6 @@ async function changePassword(req, res) {
       return res.status(400).json({
         status: 400,
         message: "Password and confirm password do not match",
-        data: null,
       });
     }
 
@@ -327,7 +306,6 @@ async function changePassword(req, res) {
       return res.status(404).json({
         status: 404,
         message: "User not found",
-        data: null,
       });
     }
 
@@ -338,7 +316,6 @@ async function changePassword(req, res) {
       return res.status(401).json({
         status: 401,
         message: "Invalid current password",
-        data: null,
       });
     }
 
@@ -348,7 +325,6 @@ async function changePassword(req, res) {
         status: 400,
         message:
           "Password must be at least 8 characters long and contain at least one uppercase letter and one number",
-        data: null,
       });
     }
 
@@ -361,7 +337,6 @@ async function changePassword(req, res) {
     return res.status(200).json({
       status: 200,
       message: "Password change success",
-      data: null,
     });
    
   } catch (error) {
@@ -369,7 +344,6 @@ async function changePassword(req, res) {
     return res.status(500).json({
       status: 500,
       message: "Internal server error",
-      data: null,
     });
   }
 }
@@ -385,7 +359,6 @@ async function changeUsername(req, res) {
       return res.status(400).json({
         status: 400,
         message: "Please provide current username and new username",
-        data: null,
       });
     }
 
@@ -396,7 +369,6 @@ async function changeUsername(req, res) {
       return res.status(404).json({
         status: 404,
         message: "User not found",
-        data: null,
       });
     }
 
@@ -404,7 +376,6 @@ async function changeUsername(req, res) {
       return res.status(400).json({
         status: 400,
         message: "Invalid current username",
-        data: null,
       });
     }
 
@@ -414,7 +385,6 @@ async function changeUsername(req, res) {
     return res.status(200).json({
       status: 200,
       message: "Username change success",
-      data: null,
     });
   } catch (error) {
     // Unique Column Error
@@ -429,14 +399,12 @@ async function changeUsername(req, res) {
       return res.status(400).json({
         status: 400,
         message: `The ${field} is already exists`,
-        data: null,
       });
     }
 
     return res.status(500).json({
       status: 500,
       message: `Internal server error`,
-      data: null,
     });
   }
 }
@@ -452,7 +420,6 @@ async function changePhone(req, res) {
       return res.status(400).json({
         status: 400,
         message: "Please provide current phone and new phone",
-        data: null,
       });
     }
 
@@ -463,7 +430,6 @@ async function changePhone(req, res) {
       return res.status(404).json({
         status: 404,
         message: "User not found",
-        data: null,
       });
     }
 
@@ -471,7 +437,6 @@ async function changePhone(req, res) {
       return res.status(400).json({
         status: 400,
         message: "Invalid current phone number",
-        data: null,
       });
     }
 
@@ -481,14 +446,12 @@ async function changePhone(req, res) {
     return res.status(200).json({
       status: 200,
       message: "Phone number change success",
-      data: null,
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       status: 500,
       message: "Internal server error",
-      data: null,
     });
   }
 }
@@ -504,7 +467,6 @@ async function changeEmail(req, res) {
       return res.status(400).json({
         status: 400,
         message: "Please provide current email and new email",
-        data: null,
       });
     }
 
@@ -515,7 +477,6 @@ async function changeEmail(req, res) {
       return res.status(404).json({
         status: 404,
         message: "User not found",
-        data: null,
       });
     }
 
@@ -523,7 +484,6 @@ async function changeEmail(req, res) {
       return res.status(400).json({
         status: 400,
         message: "Invalid current email",
-        data: null,
       });
     }
 
@@ -533,7 +493,6 @@ async function changeEmail(req, res) {
     return res.status(200).json({
       status: 200,
       message: "Email change success",
-      data: null,
     });
   } catch (error) {
     // Unique Column Error
@@ -548,14 +507,12 @@ async function changeEmail(req, res) {
       return res.status(400).json({
         status: 400,
         message: `The ${field} is already exists`,
-        data: null,
       });
     }
 
     return res.status(500).json({
       status: 500,
       message: `Internal server error`,
-      data: null,
     });
   }
 }
@@ -565,14 +522,13 @@ async function changePhotoProfile(req, res) {
 
   upload(req, res, async(err) => {
     if (err) {
-      return res.status(400).json({ status: 400, message: "File upload failed", data: null });
+      return res.status(400).json({ status: 400, message: "File upload failed" });
     }
 
     if (!req.file) {
       return res.status(400).json({
         status: 400,
         message: "Please provide a file",
-        data: null,
       });
     }
     
@@ -585,7 +541,6 @@ async function changePhotoProfile(req, res) {
         return res.status(404).json({
           status: 404,
           message: "User not found",
-          data: null,
         });
       }
 
@@ -604,14 +559,12 @@ async function changePhotoProfile(req, res) {
       return res.status(200).json({
         status: 200,
         message: "Photo profile change successful",
-        data: null,
       });
     } catch (e) {
       console.log(e);
       return res.status(500).json({
         status: 500,
         message: `Internal server error`,
-        data: null,
       });
     }
   })
