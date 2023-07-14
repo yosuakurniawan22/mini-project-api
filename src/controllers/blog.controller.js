@@ -282,4 +282,103 @@ async function getBlog(req, res) {
   }
 }
 
-export default {createBlog, deleteBlog, likeBlog, unlikeBlog, getBlog } 
+async function getBlogByUserLogin(req, res) {
+  const { id_cat, sort, page = 1, search, sortBy, size } = req.query;
+
+  const options = {
+    where: {},
+    include: [
+      {
+        model: Category,
+        as: "Category",
+      },
+      {
+        model: User,
+        as: "User",
+        attributes: ["username", "photo_profile"],
+      },
+      {
+        model: BlogKeyword,
+        as: "Blog_Keywords",
+        include: [
+          {
+            model: Keyword,
+            as: "Keywords",
+          },
+        ],
+      },
+      {
+        model: Like,
+        include: [
+          {
+            model: User,
+            as: "User",
+            attributes: ["username"],
+          },
+        ],
+      },
+    ],
+    order: [["createdAt", "DESC"]], // Order by createdAt column in descending order
+    offset: 0,
+    limit: 10,
+  };
+
+  if (id_cat) {
+    options.where.CategoryId = id_cat;
+  }
+
+  if (sort && sortBy) {
+    const order = [[sortBy, sort.toUpperCase() === "DESC" ? "DESC" : "ASC"]];
+    options.order.push(...order);
+  }
+
+  if (page && size) {
+    const offset = (page - 1) * size;
+    const limit = parseInt(size);
+    options.offset = offset;
+    options.limit = limit;
+  }
+
+  if (search) {
+    options.where.title = { [Op.like]: `%${search}%` };
+  }
+
+  try {
+    // Get USER Id From token
+    const userId = req.id;
+    options.where.UserId = userId;
+
+    const totalRows = await Blog.count({ where: options.where });
+
+    const totalPages = Math.ceil(totalRows / options.limit);
+
+    if (page > totalPages) {
+      return res.status(200).json({
+        page: page,
+        rows: totalRows,
+        blogPage: totalPages,
+        listLimit: options.limit,
+        result: [],
+      });
+    }
+
+    const blogs = await Blog.findAll(options);
+
+    return res.status(200).json({
+      page: parseInt(page),
+      rows: totalRows,
+      blogPage: totalPages,
+      listLimit: options.limit,
+      result: blogs,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      data: null,
+    });
+  }
+}
+
+export default {createBlog, deleteBlog, likeBlog, unlikeBlog, getBlog, getBlogByUserLogin } 
