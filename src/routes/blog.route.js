@@ -11,8 +11,9 @@ router.patch("/blog/remove/:id", authenticateJWT, BlogController.deleteBlog);
 router.post("/blog/like", authenticateJWT, BlogController.likeBlog);
 router.delete("/blog/unlike", authenticateJWT, BlogController.unlikeBlog);
 router.get("/blog", BlogController.getBlog);
-router.get("/blog/auth",authenticateJWT, BlogController.getBlog);
+router.get("/blog/auth",authenticateJWT, BlogController.getBlogByUserLogin);
 router.get("/blog/pagLike",authenticateJWT, BlogController.getLikedBlog);
+router.get("/blog/pagFav", BlogController.getMostFavoriteBlog);
 
 
 export default router;
