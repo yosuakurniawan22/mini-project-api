@@ -12,6 +12,7 @@ router.post("/blog/like", authenticateJWT, BlogController.likeBlog);
 router.delete("/blog/unlike", authenticateJWT, BlogController.unlikeBlog);
 router.get("/blog", BlogController.getBlog);
 router.get("/blog/auth",authenticateJWT, BlogController.getBlog);
+router.get("/blog/pagLike",authenticateJWT, BlogController.getLikedBlog);
 
 
 export default router;

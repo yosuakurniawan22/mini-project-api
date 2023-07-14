@@ -381,4 +381,113 @@ async function getBlogByUserLogin(req, res) {
   }
 }
 
-export default {createBlog, deleteBlog, likeBlog, unlikeBlog, getBlog, getBlogByUserLogin } 
+async function getLikedBlog(req, res) {
+  const { id_cat, sort, page = 1, search, sortBy, size } = req.query;
+
+  //User ID
+  const userId = req.id;
+
+  const options = {
+    where: {},
+    include: [
+      {
+        model: Category,
+        as: "Category",
+      },
+      {
+        model: User,
+        as: "User",
+        attributes: ["username", "photo_profile"],
+      },
+      {
+        model: BlogKeyword,
+        as: "Blog_Keywords",
+        include: [
+          {
+            model: Keyword,
+            as: "Keywords",
+          },
+        ],
+      },
+      {
+        model: Like,
+        include: [
+          {
+            model: User,
+            as: "User",
+            attributes: ["username"],
+            where: { id: userId },
+          },
+        ],
+      },
+    ],
+    order: [],
+    offset: 0,
+    limit: 10,
+  };
+
+  if (id_cat) {
+    options.where.CategoryId = id_cat;
+  }
+
+  if (sort && sortBy) {
+    const order = [[sortBy, sort.toUpperCase() === "DESC" ? "DESC" : "ASC"]];
+    options.order.push(...order);
+  }
+
+  if (page && size) {
+    const offset = (page - 1) * size;
+    const limit = parseInt(size);
+    options.offset = offset;
+    options.limit = limit;
+  }
+
+  if (search) {
+    options.where.title = { [Op.like]: `%${search}%` };
+  }
+
+  try {
+    const likedBlogIds = await Like.findAll({
+      attributes: ["BlogId"],
+      where: { UserId: userId },
+    });
+
+    const blogIds = likedBlogIds.map((like) => like.BlogId);
+
+    options.where.id = blogIds;
+
+    const totalRows = await Blog.count({ where: options.where });
+
+
+    const totalPages = Math.ceil(totalRows / options.limit);
+
+    if (page > totalPages) {
+      return res.status(200).json({
+        page: page,
+        rows: totalRows,
+        blogPage: totalPages,
+        listLimit: options.limit,
+        result: [],
+      });
+    }
+
+    const blogs = await Blog.findAll(options);
+
+    return res.status(200).json({
+      page: parseInt(page),
+      rows: totalRows,
+      blogPage: totalPages,
+      listLimit: options.limit,
+      result: blogs,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      data: null,
+    });
+  }
+}
+
+export default {createBlog, deleteBlog, likeBlog, unlikeBlog, getBlog, getBlogByUserLogin, getLikedBlog } 
