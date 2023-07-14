@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { uploadSingleImage } from "../utils/uploadImage";
 import { existsSync, unlink } from "fs";
+import sendEmail from "../utils/sendMail";
 
 async function register(req, res) {
   try {
@@ -40,9 +41,28 @@ async function register(req, res) {
       email: user.email
     }, process.env.SECRET_KEY, { expiresIn: '1h'});
 
+    const emailSent = await sendEmail(
+      email,
+      "Verify Account",
+      `<html>
+        <body>
+          <p>Please click this button to verify your email:</p>
+          <p><a href="http://localhost:3005/${token}" target="_blank" style="display: inline-block; background-color: black; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px;">Verify Account</a></p>
+          <p>Thank you!</p>
+        </body>
+      </html>`
+    );
+
+    if(!emailSent) {
+      return res.status(500).json({
+        status: 500,
+        message: "Internal Server Error",
+      });
+    }
+
     return res.status(201).json({
       status: 201,
-      message: "User success registered",
+      message: "User success registered. Please check your email for verify your email",
       data: user,
       token
     });
