@@ -8,7 +8,6 @@ export async function authenticateJWT(req, res, next) {
       return res.status(401).json({
         status: 401,
         message: "Unauthorized. Invalid token",
-        data: null,
       });
     }
 
@@ -18,7 +17,6 @@ export async function authenticateJWT(req, res, next) {
       return res.status(401).json({
         status: 401,
         message: "Unauthorized. No token provided",
-        data: null,
       });
     }
    
@@ -27,19 +25,19 @@ export async function authenticateJWT(req, res, next) {
         return res.status(401).json({
           status: 401,
           message: "Unauthorized. Invalid token",
-          data: null,
         });
       }
 
       req.id = decoded.id;
+      req.token = token;
 
       next();
+      
     });
   } catch (error) {
     return res.status(401).json({
       status: 401,
       message: "Unauthorized. Invalid token",
-      data: null,
     });
   }
 }

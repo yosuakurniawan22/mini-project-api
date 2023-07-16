@@ -8,7 +8,7 @@ import sendEmail from "../utils/sendMail";
 
 async function register(req, res) {
   try {
-    const { username, email, phone, password, confirmPassword } = req.body;
+    const { username, email, phone, password, confirmPassword, FE_URL } = req.body;
 
     if(!(password === confirmPassword)) {
       return res.status(400).json({
@@ -46,8 +46,8 @@ async function register(req, res) {
       "Verify Account",
       `<html>
         <body>
-          <p>Please click this button to verify your email:</p>
-          <p><a href="http://localhost:3005/${token}" target="_blank" style="display: inline-block; background-color: black; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px;">Verify Account</a></p>
+          <p>Please click this button to verify your account</p>
+          <p><a href="${FE_URL}/${token}" target="_blank" style="display: inline-block; background-color: black; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px;">Verify Account</a></p>
           <p>Thank you!</p>
         </body>
       </html>`
@@ -102,6 +102,13 @@ async function verifyAccount(req, res) {
       });
     }
 
+    if(user.verified_at) {
+      return res.status(400).json({
+        status: 400,
+        message: "Your account has been verified.",
+      });
+    }
+
     // Update user verified_at
     user.verified_at = new Date();
 
@@ -135,6 +142,13 @@ async function login(req, res) {
       return res.status(404).json({
         status: 404,
         message: "User not found",
+      });
+    }
+
+    if(!user.verified_at) {
+      return res.status(401).json({
+        status: 401,
+        message: "Unauthorized. User not verified",
       });
     }
 
@@ -183,6 +197,13 @@ async function keepLogin(req, res) {
       });
     }
 
+    if(!user.verified_at) {
+      return res.status(401).json({
+        status: 401,
+        message: "Unauthorized. User not verified",
+      });
+    }
+
     const newToken = jwt.sign({
       id: user.id,
       username: user.username,
@@ -207,7 +228,7 @@ async function keepLogin(req, res) {
 
 async function forgotPassword(req, res) {
   try {
-    const { email } = req.body;
+    const { email, FE_URL } = req.body;
 
     const user = await User.findOne({ where: { email }});
 
@@ -224,12 +245,28 @@ async function forgotPassword(req, res) {
       email: user.email
     }, process.env.SECRET_KEY, { expiresIn: '1h'});
 
-    const resetLink = `http://localhost:3005/reset-password?token=${token}`;
+    const emailSent = await sendEmail(
+      email,
+      "Reset password",
+      `<html>
+        <body>
+          <p>Please click this button to reset your password:</p>
+          <p><a href="${FE_URL}/${token}" target="_blank" style="display: inline-block; background-color: black; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px;">Verify Account</a></p>
+          <p>Thank you!</p>
+        </body>
+      </html>`
+    );
+
+    if(!emailSent) {
+      return res.status(500).json({
+        status: 500,
+        message: "Internal Server Error",
+      });
+    }
 
     return res.status(200).json({
       status: 200,
-      message: "Password reset link sent",
-      resetLink,
+      message: "Password reset link sent. Please check your email.",
       data: token,
     });
   } catch (error) {
@@ -329,6 +366,13 @@ async function changePassword(req, res) {
       });
     }
 
+    if(!user.verified_at) {
+      return res.status(401).json({
+        status: 401,
+        message: "Unauthorized. User not verified",
+      });
+    }
+
     // Compare the current password with the stored hashed password
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
 
@@ -370,15 +414,23 @@ async function changePassword(req, res) {
 
 async function changeUsername(req, res) {
   try {
-    const { currentUsername, newUsername } = req.body;
+    const { currentUsername, newUsername, FE_URL} = req.body;
 
     // Get user id from jwt token
     const id = req.id; 
+    const token = req.token;
 
     if (!currentUsername || !newUsername) {
       return res.status(400).json({
         status: 400,
         message: "Please provide current username and new username",
+      });
+    }
+
+    if (!FE_URL) {
+      return res.status(400).json({
+        status: 400,
+        message: "Please provide a FE_URL",
       });
     }
 
@@ -392,6 +444,13 @@ async function changeUsername(req, res) {
       });
     }
 
+    if(!user.verified_at) {
+      return res.status(401).json({
+        status: 401,
+        message: "Unauthorized. User not verified, please check your email for verify your account!",
+      });
+    }
+
     if (user.username !== currentUsername) {
       return res.status(400).json({
         status: 400,
@@ -399,14 +458,35 @@ async function changeUsername(req, res) {
       });
     }
 
+    const emailSent = await sendEmail(
+      user.email,
+      "Verify Account",
+      `<html>
+        <body>
+          <p>Please click this button to verify your account</p>
+          <p><a href="${FE_URL}/${token}" target="_blank" style="display: inline-block; background-color: black; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px;">Verify Account</a></p>
+          <p>Thank you!</p>
+        </body>
+      </html>`
+    );
+
+    if(!emailSent) {
+      return res.status(500).json({
+        status: 500,
+        message: "Internal Server Error",
+      });
+    }
+
     user.username = newUsername;
+    user.verified_at = null;
     await user.save();
 
     return res.status(200).json({
       status: 200,
-      message: "Username change success",
+      message: "Username change success. Please check your email for verify your account again!",
     });
   } catch (error) {
+    console.log(error);
     // Unique Column Error
     if (error.name === "SequelizeUniqueConstraintError") {
       let field = "";
@@ -431,15 +511,23 @@ async function changeUsername(req, res) {
 
 async function changePhone(req, res) {
   try {
-    const { currentPhone, newPhone } = req.body;
+    const { currentPhone, newPhone, FE_URL} = req.body;
 
     // Get User ID from JWT token
     const id = req.id; 
+    const token = req.token;
 
     if (!currentPhone || !newPhone) {
       return res.status(400).json({
         status: 400,
         message: "Please provide current phone and new phone",
+      });
+    }
+
+    if (!FE_URL) {
+      return res.status(400).json({
+        status: 400,
+        message: "Please provide a FE_URL",
       });
     }
 
@@ -453,6 +541,13 @@ async function changePhone(req, res) {
       });
     }
 
+    if(!user.verified_at) {
+      return res.status(401).json({
+        status: 401,
+        message: "Unauthorized. User not verified",
+      });
+    }
+
     if (user.phone !== currentPhone) {
       return res.status(400).json({
         status: 400,
@@ -460,12 +555,32 @@ async function changePhone(req, res) {
       });
     }
 
+    const emailSent = await sendEmail(
+      user.email,
+      "Verify Account",
+      `<html>
+        <body>
+          <p>Please click this button to verify your account</p>
+          <p><a href="${FE_URL}/${token}" target="_blank" style="display: inline-block; background-color: black; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px;">Verify Account</a></p>
+          <p>Thank you!</p>
+        </body>
+      </html>`
+    );
+
+    if(!emailSent) {
+      return res.status(500).json({
+        status: 500,
+        message: "Internal Server Error",
+      });
+    }
+
     user.phone = newPhone;
+    user.verified_at = null;
     await user.save();
 
     return res.status(200).json({
       status: 200,
-      message: "Phone number change success",
+      message: "Phone number change success. Please check your email for verify your account again!",
     });
   } catch (error) {
     console.error(error);
@@ -478,15 +593,23 @@ async function changePhone(req, res) {
 
 async function changeEmail(req, res) {
   try {
-    const { currentEmail, newEmail } = req.body;
+    const { currentEmail, newEmail, FE_URL } = req.body;
     
     // Get user id from JWT Token
     const id = req.id;
+    const token = req.token;
 
     if (!currentEmail || !newEmail) {
       return res.status(400).json({
         status: 400,
         message: "Please provide current email and new email",
+      });
+    }
+
+    if (!FE_URL) {
+      return res.status(400).json({
+        status: 400,
+        message: "Please provide a FE_URL",
       });
     }
 
@@ -500,6 +623,13 @@ async function changeEmail(req, res) {
       });
     }
 
+    if(!user.verified_at) {
+      return res.status(401).json({
+        status: 401,
+        message: "Unauthorized. User not verified",
+      });
+    }
+
     if (user.email !== currentEmail) {
       return res.status(400).json({
         status: 400,
@@ -507,12 +637,32 @@ async function changeEmail(req, res) {
       });
     }
 
+    const emailSent = await sendEmail(
+      newEmail,
+      "Verify Account",
+      `<html>
+        <body>
+          <p>Please click this button to verify your account</p>
+          <p><a href="${FE_URL}/${token}" target="_blank" style="display: inline-block; background-color: black; color: white; text-decoration: none; padding: 10px 20px; border-radius: 4px;">Verify Account</a></p>
+          <p>Thank you!</p>
+        </body>
+      </html>`
+    );
+
+    if(!emailSent) {
+      return res.status(500).json({
+        status: 500,
+        message: "Internal Server Error",
+      });
+    }
+
     user.email = newEmail;
+    user.verified_at = null;
     await user.save();
 
     return res.status(200).json({
       status: 200,
-      message: "Email change success",
+      message: "Email change success. Please check your email for verify your account again!",
     });
   } catch (error) {
     // Unique Column Error
@@ -561,6 +711,13 @@ async function changePhotoProfile(req, res) {
         return res.status(404).json({
           status: 404,
           message: "User not found",
+        });
+      }
+
+      if(!user.verified_at) {
+        return res.status(401).json({
+          status: 401,
+          message: "Unauthorized. User not verified",
         });
       }
 

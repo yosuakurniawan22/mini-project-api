@@ -12,7 +12,7 @@ async function createBlog(req, res) {
 
   upload(req, res, async(err) => {
     if (err) {
-      return res.status(400).json({ status: 400, message: "File upload failed", data: null });
+      return res.status(400).json({ status: 400, message: "File upload failed" });
     }
 
     if (!req.file) {
@@ -33,11 +33,19 @@ async function createBlog(req, res) {
       const category = await Category.findByPk(CategoryId);
       const UserId = req.id;
 
+      const user = await User.findByPk(UserId);
+
+      if(!user.verified_at) {
+        return res.status(401).json({
+          status: 401,
+          message: "Unauthorized. User not verified",
+        });
+      }
+
       if (!category) {
         return res.status(404).json({
           status: 404,
           message: "Category not found",
-          data: null,
         });
       }
 
@@ -78,18 +86,34 @@ async function createBlog(req, res) {
 
 async function deleteBlog(req, res) {
   const { id } = req.params;
+  const userId = req.id;
 
   try {
+    const user = await User.findByPk(userId);
+
+    if(!user.verified_at) {
+      return res.status(401).json({
+        status: 401,
+        message: "Unauthorized. User not verified",
+      });
+    }
+
     const blog = await Blog.findByPk(id);
 
     if (!blog) {
       return res.status(404).json({
         status: 404,
         message: "Blog not found",
-        data: null,
       });
     }
 
+    if(blog.UserId !== userId) {
+      return res.status(401).json({
+        status: 401,
+        message: "Unauthorized. You cannot delete this blog",
+      });
+    }
+    
     await blog.destroy();
 
     return res.status(200).json({
@@ -110,13 +134,21 @@ async function likeBlog(req, res) {
   const UserId = req.id;
 
   try {
+    const user = await User.findByPk(UserId);
+
+    if(!user.verified_at) {
+      return res.status(401).json({
+        status: 401,
+        message: "Unauthorized. User not verified",
+      });
+    }
+
     const blog = await Blog.findByPk(BlogId);
 
     if(!blog) {
       return res.status(404).json({
         status: 404,
         message: "Blog not found",
-        data: null,
       });
     }
 
@@ -128,7 +160,6 @@ async function likeBlog(req, res) {
       return res.status(400).json({
         status: 400,
         message: "Blog already liked",
-        data: null,
       });
     }
 
